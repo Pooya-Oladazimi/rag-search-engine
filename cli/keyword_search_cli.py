@@ -1,4 +1,6 @@
 import argparse
+from actions.search import search
+from actions.render import render_movies_titles
 
 
 def main() -> None:
@@ -13,6 +15,7 @@ def main() -> None:
     match args.command:
         case "search":
             print(f"Searching for: {args.query}")
+            render_movies_titles(search(args.query, 50))
         case _:
             parser.print_help()
 
