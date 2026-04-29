@@ -1,0 +1,6 @@
+STOPWORDS_DATASET = "data/stopwords.txt"
+DATASET = "data/movies.json"
+INDEX_DATA = "cache/index.pkl"
+DOCMAP_DATA = "cache/docmap.pkl"
+TERM_FEQUENCIES_DATA = "cache/term_frequencies.pkl"
+CACHE_DIR = "cache"
