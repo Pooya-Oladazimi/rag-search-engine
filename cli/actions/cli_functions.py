@@ -46,15 +46,19 @@ class CliFunctions:
         self.index_is_loaded = False
         return True
 
-    def tf(self, docId, term):
+    def tf(self, docId, term) -> int:
         self.__load()
-        print(self.indexer.get_tf(docId, term))
-        return True
+        tf_res = self.indexer.get_tf(docId, term)
+        return tf_res
 
-    def idf(self, term):
+    def idf(self, term) -> float:
         self.__load()
         total_doc_count = len(self.indexer.docmap.keys()) + 1
         doc_frq = len(self.indexer.get_documents(term)) + 1
         idf = math.log(total_doc_count / doc_frq)
-        print(f"Inverse document frequency of '{term}': {idf:.2f}")
-        return True
+        return idf
+
+    def tf_idf(self, docId, term) -> float:
+        idf = self.idf(term)
+        tf = self.tf(docId, term)
+        return tf * idf

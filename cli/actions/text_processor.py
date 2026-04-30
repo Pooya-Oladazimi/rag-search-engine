@@ -5,20 +5,27 @@ from actions.vars import STOPWORDS_DATASET
 
 class TextProcessor:
     def __init__(self) -> None:
-        self.__cleaned_string = ""
-        self.__raw_tokens = []
-        self.__raw_tokens_without_stopwords = []
+        self._cleaned_string = ""
+        self._raw_tokens = []
+        self._raw_tokens_without_stopwords = []
         self.tokens = []
 
     def process(self, s: str):
-        self.__cleaned_string = self.__clean_string(s)
-        self.__raw_tokens = self.__tokenize(self.__cleaned_string)
-        self.__raw_tokens_without_stopwords = self.__remove_stopwords(self.__raw_tokens)
-        self.tokens = self.__stem(self.__raw_tokens_without_stopwords)
+        self._cleaned_string = self.__clean_string(s)
+        self._raw_tokens = self.__tokenize(self._cleaned_string)
+        self._raw_tokens_without_stopwords = self.__remove_stopwords(self._raw_tokens)
+        self.tokens = self.__stem(self._raw_tokens_without_stopwords)
         return True
 
     def __clean_string(self, s: str) -> str:
         sc = s.lower()
+        sc = sc.encode().decode("unicode_escape")
+        sc_table = str.maketrans("’", "'")
+        sc = sc.translate(sc_table)
+        sc = sc.replace("'s ", " ")
+        sc = sc.replace('"', " ")
+        sc = sc.replace("'", " ")
+        sc = sc.replace("\n", " ")
         sc_table = str.maketrans("", "", string.punctuation)
         sc = sc.translate(sc_table)
         return sc

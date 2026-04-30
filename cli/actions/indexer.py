@@ -40,16 +40,14 @@ class InvertedIndex:
         self.text_proc.tokens = []
         return res
 
-    def get_tf(self, doc_id, term):
+    def get_tf(self, doc_id, term) -> int:
         # term has to be one token
         self.text_proc.process(term)
         tokens = self.text_proc.tokens
         if len(tokens) != 1:
             raise Exception("search term has to be one token.")
-        tf = self.term_frequencies[doc_id].get(tokens[0])
+        tf = self.term_frequencies[doc_id].get(tokens[0], 0)
         self.text_proc.tokens = []
-        if not tf:
-            return "O"
         return tf
 
     def build(self):
