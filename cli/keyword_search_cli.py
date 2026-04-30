@@ -1,8 +1,5 @@
 import argparse
-from actions.search import search
-from actions.render import render_movies_titles
-from actions.indexer import InvertedIndex
-import math
+from actions.cli_functions import CliFunctions
 
 
 def main() -> None:
@@ -21,26 +18,17 @@ def main() -> None:
     idf_parser.add_argument("term", type=str, help="The target term")
 
     args = parser.parse_args()
+    cli = CliFunctions()
 
     match args.command:
         case "search":
-            print(f"Searching for: {args.query}")
-            render_movies_titles(search(args.query))
+            cli.search(args.query)
         case "build":
-            invdex = InvertedIndex()
-            invdex.build()
-            invdex.save()
+            cli.build()
         case "tf":
-            index = InvertedIndex()
-            index.load()
-            print(index.get_tf(args.docId, args.term))
+            cli.tf(args.docId, args.term)
         case "idf":
-            index = InvertedIndex()
-            index.load()
-            total_doc_count = len(index.docmap.keys()) + 1
-            doc_frq = len(index.get_documents(args.term)) + 1
-            idf = math.log(total_doc_count / doc_frq)
-            print(f"Inverse document frequency of '{args.term}': {idf:.2f}")
+            cli.idf(args.term)
         case _:
             parser.print_help()
 
