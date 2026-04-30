@@ -1,7 +1,7 @@
 from actions.indexer import InvertedIndex
 import math
 from actions.indexer import InvertedIndex
-from actions.text_processor import cleaned_tokenize
+from actions.text_processor import TextProcessor
 
 
 class CliFunctions:
@@ -23,7 +23,9 @@ class CliFunctions:
 
     def __search(self, query):
         result = []
-        q_tokens = cleaned_tokenize(query)
+        text_proc = TextProcessor()
+        text_proc.process(query)
+        q_tokens = text_proc.tokens
         self.__load()
         for t in q_tokens:
             docs = self.indexer.get_documents(t)

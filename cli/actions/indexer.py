@@ -11,7 +11,7 @@ import json
 import pickle
 import os
 import pathlib
-from actions.text_processor import cleaned_tokenize
+from actions.text_processor import TextProcessor
 
 
 class InvertedIndex:
@@ -19,29 +19,35 @@ class InvertedIndex:
         self.index = defaultdict(list)
         self.docmap = {}
         self.term_frequencies = defaultdict(Counter)
+        self.text_proc = TextProcessor()
 
     def __add_document(self, doc_id, text):
-        tokens = cleaned_tokenize(text)
-        for t in tokens:
+        self.text_proc.process(text)
+        for t in self.text_proc.tokens:
             if doc_id not in self.index[t]:
                 self.index[t].append(doc_id)
+        self.text_proc.tokens = []
 
     def get_documents(self, term: str) -> list[int]:
         # we assume each term is one token
         term = term.lower()
-        tokens = cleaned_tokenize(term)
+        self.text_proc.process(term)
+        tokens = self.text_proc.tokens
         if len(tokens) != 1:
             raise Exception("input has to be one token")
         res = self.index.get(tokens[0], [])
         res.sort()
+        self.text_proc.tokens = []
         return res
 
     def get_tf(self, doc_id, term):
         # term has to be one token
-        tokens = cleaned_tokenize(term)
+        self.text_proc.process(term)
+        tokens = self.text_proc.tokens
         if len(tokens) != 1:
             raise Exception("search term has to be one token.")
         tf = self.term_frequencies[doc_id].get(tokens[0])
+        self.text_proc.tokens = []
         if not tf:
             return "O"
         return tf
@@ -53,8 +59,10 @@ class InvertedIndex:
             for m in movies:
                 doc_text = f"{m['title']} {m['description']}"
                 self.__add_document(m["id"], doc_text)
+                self.text_proc.process(doc_text)
                 self.docmap[m["id"]] = m
-                self.term_frequencies[m["id"]].update(cleaned_tokenize(doc_text))
+                self.term_frequencies[m["id"]].update(self.text_proc.tokens)
+                self.text_proc.tokens = []
 
     def save(self):
         target_dir = os.path.join(os.getcwd(), CACHE_DIR)
