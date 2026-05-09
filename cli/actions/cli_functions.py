@@ -53,12 +53,18 @@ class CliFunctions:
 
     def idf(self, term) -> float:
         self.__load()
-        total_doc_count = len(self.indexer.docmap.keys()) + 1
-        doc_frq = len(self.indexer.get_documents(term)) + 1
-        idf = math.log(total_doc_count / doc_frq)
+        idf = self.indexer.get_idf(term)
         return idf
 
     def tf_idf(self, docId, term) -> float:
         idf = self.idf(term)
         tf = self.tf(docId, term)
         return tf * idf
+
+    def bm25idf(self, term: str) -> float:
+        self.__load()
+        return self.indexer.get_bm25_idf(term)
+
+    def bm25tf(self, docId: int, term: str, k1: float) -> float:
+        self.__load()
+        return self.indexer.get_bm25_tf(term=term, docId=docId, k1=k1)

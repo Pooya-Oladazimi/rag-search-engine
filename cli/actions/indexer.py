@@ -12,6 +12,7 @@ import pickle
 import os
 import pathlib
 from actions.text_processor import TextProcessor
+import math
 
 
 class InvertedIndex:
@@ -49,6 +50,20 @@ class InvertedIndex:
         tf = self.term_frequencies[doc_id].get(tokens[0], 0)
         self.text_proc.tokens = []
         return tf
+
+    def get_idf(self, term: str) -> float:
+        total_doc_count = len(self.docmap.keys()) + 1
+        doc_frq = len(self.get_documents(term)) + 1
+        return math.log(total_doc_count / doc_frq)
+
+    def get_bm25_idf(self, term: str) -> float:
+        df = len(self.get_documents(term))
+        total_docs = len(self.docmap.keys())
+        return math.log((total_docs - df + 0.5) / (df + 0.5) + 1)
+
+    def get_bm25_tf(self, term: str, docId: int, k1: float) -> float:
+        tf = self.get_tf(doc_id=docId, term=term)
+        return (tf * (k1 + 1)) / (tf + k1)
 
     def build(self):
         with open(DATASET, "r") as f:

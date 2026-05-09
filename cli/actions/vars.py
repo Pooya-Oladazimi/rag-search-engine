@@ -4,3 +4,4 @@ INDEX_DATA = "cache/index.pkl"
 DOCMAP_DATA = "cache/docmap.pkl"
 TERM_FEQUENCIES_DATA = "cache/term_frequencies.pkl"
 CACHE_DIR = "cache"
+BM25_K1 = 1.5

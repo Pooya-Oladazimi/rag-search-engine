@@ -1,5 +1,6 @@
 import argparse
 from actions.cli_functions import CliFunctions
+from actions.vars import BM25_K1
 
 
 def main() -> None:
@@ -12,13 +13,27 @@ def main() -> None:
     tf_parser = commands.add_parser(
         "tf", help="Get the term frequency of a term in a document."
     )
-    tf_parser.add_argument("docId", type=int, help="The document id")
-    tf_parser.add_argument("term", type=str, help="Target term")
+
+    term_args_keys = {"type": str, "help": "The target term"}
+    docid_args_keys = {"type": int, "help": "The target document id"}
+
+    tf_parser.add_argument("docId", **docid_args_keys)
+    tf_parser.add_argument("term", **term_args_keys)
     idf_parser = commands.add_parser("idf", help="Get idf for a term")
-    idf_parser.add_argument("term", type=str, help="The target term")
+    idf_parser.add_argument("term", **term_args_keys)
     tfidf_parser = commands.add_parser("tfidf", help="Get tf-idf for a term in a doc")
-    tfidf_parser.add_argument("docId", type=int, help="The document id")
-    tfidf_parser.add_argument("term", type=str, help="Target term")
+    tfidf_parser.add_argument("docId", **docid_args_keys)
+    tfidf_parser.add_argument("term", **term_args_keys)
+    bm25idf_parser = commands.add_parser("bm25idf", help="Get the Bm25idf for a term.")
+    bm25idf_parser.add_argument("term", **term_args_keys)
+    bm25tf_parser = commands.add_parser(
+        "bm25tf", help="Get the Bm25tf for a term in a doc"
+    )
+    bm25tf_parser.add_argument("docId", **docid_args_keys)
+    bm25tf_parser.add_argument("term", **term_args_keys)
+    bm25tf_parser.add_argument(
+        "k1", type=float, nargs="?", default=BM25_K1, help="Tunable BM25 K1 parameter"
+    )
 
     args = parser.parse_args()
     cli = CliFunctions()
@@ -38,6 +53,13 @@ def main() -> None:
             tfidf = cli.tf_idf(args.docId, args.term)
             print(
                 f"TF-IDF score of '{args.term}' in document '{args.docId}': {tfidf:.2f}"
+            )
+        case "bm25idf":
+            print(f"BM25 IDF score of '{args.term}': {cli.bm25idf(args.term):.2f}")
+        case "bm25tf":
+            bm25tf = cli.bm25tf(term=args.term, docId=args.docId, k1=args.k1)
+            print(
+                f"BM25 TF score of '{args.term}' in document '{args.docId}': {bm25tf:.2f}"
             )
         case _:
             parser.print_help()
