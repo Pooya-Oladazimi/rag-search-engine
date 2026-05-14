@@ -6,6 +6,9 @@ from actions.vars import (
     DOCMAP_DATA,
     CACHE_DIR,
     TERM_FEQUENCIES_DATA,
+    DOCS_LENGTH_CACHE,
+    BM25_B,
+    BM25_K1,
 )
 import json
 import pickle
@@ -20,10 +23,14 @@ class InvertedIndex:
         self.index = defaultdict(list)
         self.docmap = {}
         self.term_frequencies = defaultdict(Counter)
+        self.doc_lengths = defaultdict(int)
         self.text_proc = TextProcessor()
+        self.k1 = BM25_K1
+        self.b = BM25_B
 
     def __add_document(self, doc_id, text):
         self.text_proc.process(text)
+        self.doc_lengths[doc_id] = len(self.text_proc.tokens)
         for t in self.text_proc.tokens:
             if doc_id not in self.index[t]:
                 self.index[t].append(doc_id)
@@ -38,7 +45,6 @@ class InvertedIndex:
             raise Exception("input has to be one token")
         res = self.index.get(tokens[0], [])
         res.sort()
-        self.text_proc.tokens = []
         return res
 
     def get_tf(self, doc_id, term) -> int:
@@ -48,7 +54,6 @@ class InvertedIndex:
         if len(tokens) != 1:
             raise Exception("search term has to be one token.")
         tf = self.term_frequencies[doc_id].get(tokens[0], 0)
-        self.text_proc.tokens = []
         return tf
 
     def get_idf(self, term: str) -> float:
@@ -61,9 +66,26 @@ class InvertedIndex:
         total_docs = len(self.docmap.keys())
         return math.log((total_docs - df + 0.5) / (df + 0.5) + 1)
 
-    def get_bm25_tf(self, term: str, docId: int, k1: float) -> float:
+    def get_bm25_tf(self, term: str, docId: int) -> float:
         tf = self.get_tf(doc_id=docId, term=term)
-        return (tf * (k1 + 1)) / (tf + k1)
+        length_norm = (
+            1
+            - self.b
+            + self.b * (self.doc_lengths.get(docId, 0) / self.__get_avg_doc_length())
+        )
+        return (tf * (self.k1 + 1)) / (tf + self.k1 * length_norm)
+
+    def bm25_score(self, term: str, docId: int):
+        return self.get_bm25_tf(term=term, docId=docId) * self.get_bm25_idf(term=term)
+
+    def bm25_search(self, query: str, limit: int = 5) -> dict[int, float]:
+        self.text_proc.process(query)
+        query_tokens = self.text_proc.tokens
+        scores = defaultdict(float)
+        for t in query_tokens:
+            for docId in self.index[t]:
+                scores[docId] += self.bm25_score(term=t, docId=docId)
+        return dict(sorted(scores.items(), key=lambda x: x[1], reverse=True)[:limit])
 
     def build(self):
         with open(DATASET, "r") as f:
@@ -91,6 +113,9 @@ class InvertedIndex:
         with open(TERM_FEQUENCIES_DATA, "wb") as f:
             pickle.dump(self.term_frequencies, f)
 
+        with open(DOCS_LENGTH_CACHE, "wb") as f:
+            pickle.dump(self.doc_lengths, f)
+
     def load(self):
         if not self.__cache_file_exists(INDEX_DATA):
             raise Exception("index is missing. Build it first")
@@ -98,6 +123,8 @@ class InvertedIndex:
             raise Exception("docmap is missing. Build it first")
         if not self.__cache_file_exists(TERM_FEQUENCIES_DATA):
             raise Exception("term freq is missing. Build the index first")
+        if not self.__cache_file_exists(DOCS_LENGTH_CACHE):
+            raise Exception("Docs Length cache is missing. Build it first.")
 
         with open(INDEX_DATA, "rb") as f:
             self.index = pickle.load(f)
@@ -105,8 +132,16 @@ class InvertedIndex:
             self.docmap = pickle.load(f)
         with open(TERM_FEQUENCIES_DATA, "rb") as f:
             self.term_frequencies = pickle.load(f)
+        with open(DOCS_LENGTH_CACHE, "rb") as f:
+            self.doc_lengths = pickle.load(f)
 
     def __cache_file_exists(self, file_path: str):
         abs_file_path = os.path.join(os.getcwd(), file_path)
         p_file_path = pathlib.Path(abs_file_path)
         return p_file_path.is_file()
+
+    def __get_avg_doc_length(self) -> float:
+        docs_count = len(self.doc_lengths.keys())
+        if not docs_count:
+            return 0.0
+        return sum(self.doc_lengths.values()) / docs_count

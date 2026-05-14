@@ -1,6 +1,6 @@
 import argparse
 from actions.cli_functions import CliFunctions
-from actions.vars import BM25_K1
+from actions.vars import BM25_K1, BM25_B
 
 
 def main() -> None:
@@ -34,6 +34,13 @@ def main() -> None:
     bm25tf_parser.add_argument(
         "k1", type=float, nargs="?", default=BM25_K1, help="Tunable BM25 K1 parameter"
     )
+    bm25tf_parser.add_argument(
+        "b", type=float, nargs="?", default=BM25_B, help="Tunable BM25 b parameter"
+    )
+    bm25search_parser = commands.add_parser(
+        "bm25search", help="Search movies using full BM25 scoring"
+    )
+    bm25search_parser.add_argument("query", type=str, help="Search query")
 
     args = parser.parse_args()
     cli = CliFunctions()
@@ -57,10 +64,12 @@ def main() -> None:
         case "bm25idf":
             print(f"BM25 IDF score of '{args.term}': {cli.bm25idf(args.term):.2f}")
         case "bm25tf":
-            bm25tf = cli.bm25tf(term=args.term, docId=args.docId, k1=args.k1)
+            bm25tf = cli.bm25tf(term=args.term, docId=args.docId, k1=args.k1, b=args.b)
             print(
                 f"BM25 TF score of '{args.term}' in document '{args.docId}': {bm25tf:.2f}"
             )
+        case "bm25search":
+            cli.bm25search(query=args.query, limit=5)
         case _:
             parser.print_help()
 

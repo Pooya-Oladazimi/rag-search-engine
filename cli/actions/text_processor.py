@@ -19,12 +19,11 @@ class TextProcessor:
 
     def __clean_string(self, s: str) -> str:
         sc = s.lower()
-        sc = sc.encode().decode("unicode_escape")
-        sc_table = str.maketrans("’", "'")
-        sc = sc.translate(sc_table)
-        sc = sc.replace("'s ", " ")
-        sc = sc.replace('"', " ")
-        sc = sc.replace("'", " ")
+        # sc = sc.encode().decode("unicode_escape")
+        # sc_table = str.maketrans("’", "'")
+        # sc = sc.translate(sc_table)
+        # sc = sc.replace("'s", "")
+        # sc = sc.replace('"', " ")
         sc = sc.replace("\n", " ")
         sc_table = str.maketrans("", "", string.punctuation)
         sc = sc.translate(sc_table)

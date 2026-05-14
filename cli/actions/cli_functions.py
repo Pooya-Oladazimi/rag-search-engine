@@ -1,5 +1,4 @@
 from actions.indexer import InvertedIndex
-import math
 from actions.indexer import InvertedIndex
 from actions.text_processor import TextProcessor
 
@@ -36,6 +35,14 @@ class CliFunctions:
 
         return result
 
+    def __render_bm25_search_results(self, scores: dict[int, float]):
+        counter = 1
+        for docId, score in scores.items():
+            print(
+                f"{counter}. ({docId}) {self.indexer.docmap[docId]['title']} - Score: {score:.2f}"
+            )
+            counter += 1
+
     def search(self, query):
         print(f"Searching for: {query}")
         self.__render_movies_titles(self.__search(query))
@@ -65,6 +72,13 @@ class CliFunctions:
         self.__load()
         return self.indexer.get_bm25_idf(term)
 
-    def bm25tf(self, docId: int, term: str, k1: float) -> float:
+    def bm25tf(self, docId: int, term: str, k1: float, b: float) -> float:
         self.__load()
-        return self.indexer.get_bm25_tf(term=term, docId=docId, k1=k1)
+        self.indexer.k1 = k1
+        self.indexer.b = b
+        return self.indexer.get_bm25_tf(term=term, docId=docId)
+
+    def bm25search(self, query: str, limit: int):
+        self.__load()
+        results = self.indexer.bm25_search(query=query, limit=limit)
+        self.__render_bm25_search_results(results)
