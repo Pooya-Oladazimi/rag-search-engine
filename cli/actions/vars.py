@@ -4,6 +4,7 @@ INDEX_DATA = "cache/index.pkl"
 DOCMAP_DATA = "cache/docmap.pkl"
 DOCS_LENGTH_CACHE = "cache/doc_lengths.pkl"
 TERM_FEQUENCIES_DATA = "cache/term_frequencies.pkl"
+DOCS_EMBEDDINGS_CACHE = "cache/movie_embeddings.npy"
 CACHE_DIR = "cache"
 BM25_K1 = 1.5
 BM25_B = 0.75

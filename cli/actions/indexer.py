@@ -1,7 +1,6 @@
 from collections import defaultdict, Counter
 
 from actions.vars import (
-    DATASET,
     INDEX_DATA,
     DOCMAP_DATA,
     CACHE_DIR,
@@ -10,12 +9,12 @@ from actions.vars import (
     BM25_B,
     BM25_K1,
 )
-import json
 import pickle
 import os
 import pathlib
 from actions.text_processor import TextProcessor
 import math
+from actions.libs import load_dataset
 
 
 class InvertedIndex:
@@ -88,16 +87,14 @@ class InvertedIndex:
         return dict(sorted(scores.items(), key=lambda x: x[1], reverse=True)[:limit])
 
     def build(self):
-        with open(DATASET, "r") as f:
-            dataset = json.loads(f.read())
-            movies = dataset["movies"]
-            for m in movies:
-                doc_text = f"{m['title']} {m['description']}"
-                self.__add_document(m["id"], doc_text)
-                self.text_proc.process(doc_text)
-                self.docmap[m["id"]] = m
-                self.term_frequencies[m["id"]].update(self.text_proc.tokens)
-                self.text_proc.tokens = []
+        movies = load_dataset()
+        for m in movies:
+            doc_text = f"{m['title']} {m['description']}"
+            self.__add_document(m["id"], doc_text)
+            self.text_proc.process(doc_text)
+            self.docmap[m["id"]] = m
+            self.term_frequencies[m["id"]].update(self.text_proc.tokens)
+            self.text_proc.tokens = []
 
     def save(self):
         target_dir = os.path.join(os.getcwd(), CACHE_DIR)
