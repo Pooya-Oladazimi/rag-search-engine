@@ -43,3 +43,36 @@ class SemanticSearch:
                     return self.embeddings
         else:
             return self.build_embeddings(documents=documents)
+
+    def cosine_similarity(self, vec1, vec2) -> float:
+        prod = np.dot(vec1, vec2)
+        mag_vec1 = np.linalg.norm(vec1)
+        mag_vec2 = np.linalg.norm(vec2)
+        if not mag_vec1 or not mag_vec2:
+            return 0.0
+        return prod / (mag_vec1 * mag_vec2)
+
+    def search(self, query: str, limit: int):
+        if self.embeddings is None or self.documents is None:
+            raise ValueError(
+                "No embeddings loaded. Call `load_or_create_embeddings` first."
+            )
+        query_emedding = self.generate_embedding(text=query)
+        scores = []
+        for i in range(len(self.documents)):
+            doc_vec = self.embeddings[i]
+            doc = self.documents[i]
+            sim = self.cosine_similarity(query_emedding, doc_vec)
+            t = tuple([sim, doc])
+            scores.append(t)
+        tops = sorted(scores, key=lambda x: x[0], reverse=True)[:limit]
+        res = []
+        for s in tops:
+            res.append(
+                {
+                    "score": s[0],
+                    "title": s[1]["title"],
+                    "description": s[1]["description"],
+                }
+            )
+        return res

@@ -18,3 +18,25 @@ class SemanticCliFunctions:
         return len(documents), self.search_engine.load_or_create_embeddings(
             documents=documents
         )
+
+    def search(self, query: str, limit: int = 5):
+        documents = load_dataset()
+        self.search_engine.load_or_create_embeddings(documents)
+        tops = self.search_engine.search(query=query, limit=limit)
+        counter = 1
+        for res in tops:
+            print(
+                f"{counter}. {res['title']} (score: {res['score']:.4f})\n{res['description'][:200]} ..\n"
+            )
+            counter += 1
+        return True
+
+    def chunk(self, text: str, chunk_size: int, overlap: int = 0) -> list[str]:
+        res = []
+        chars = text.split(" ")
+        for i in range(0, len(chars), chunk_size):
+            if i == 0:
+                res.append(" ".join(chars[i : i + chunk_size]))
+            else:
+                res.append(" ".join(chars[i - overlap : i + chunk_size]))
+        return res

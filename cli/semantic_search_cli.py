@@ -20,6 +20,33 @@ def main():
     embed_query = commands.add_parser("embed_query", help="Embed a user query.")
     embed_query.add_argument("query", type=str, help="The user query to embed.")
 
+    search_command = commands.add_parser(
+        "search", help="Search after movies by a query"
+    )
+    search_command.add_argument("query", type=str, help="The user query to search.")
+    search_command.add_argument(
+        "--limit", type=int, nargs="?", default=5, help="Search limit"
+    )
+
+    chunk_command = commands.add_parser(
+        "chunk", help="Chunk a document based on chunk size."
+    )
+    chunk_command.add_argument("text", type=str, help="The input text for chunking")
+    chunk_command.add_argument(
+        "--chunk-size",
+        type=int,
+        nargs="?",
+        default=200,
+        help="the chunk size. default is 200",
+    )
+    chunk_command.add_argument(
+        "--overlap",
+        type=int,
+        nargs="?",
+        default=0,
+        help="the chunk overlap size. default is 0",
+    )
+
     args = parser.parse_args()
 
     cli = SemanticCliFunctions()
@@ -43,6 +70,15 @@ def main():
             print(f"Query: {args.query}")
             print(f"First 3 dimensions: {embedding[:3]}")
             print(f"Shape: {embedding.shape}")
+        case "search":
+            cli.search(query=args.query, limit=args.limit)
+        case "chunk":
+            res = cli.chunk(
+                text=args.text, chunk_size=args.chunk_size, overlap=args.overlap
+            )
+            print(f"Chunking {len(args.text)} characters")
+            for i in range(len(res)):
+                print(f"{i+1}. {res[i]}")
         case _:
             parser.print_help()
 
