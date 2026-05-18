@@ -1,4 +1,6 @@
 import argparse
+
+from huggingface_hub.file_download import HEADER_FILENAME_PATTERN
 from actions.semantic_cli_functions import SemanticCliFunctions
 
 
@@ -47,6 +49,27 @@ def main():
         help="the chunk overlap size. default is 0",
     )
 
+    semantic_chunk_command = commands.add_parser(
+        "semantic_chunk", help="Semanticaly chunk a text."
+    )
+    semantic_chunk_command.add_argument(
+        "text", type=str, help="the input text to chunk"
+    )
+    semantic_chunk_command.add_argument(
+        "--max-chunk-size",
+        type=int,
+        nargs="?",
+        default=4,
+        help="the chunk size. default is 200",
+    )
+    semantic_chunk_command.add_argument(
+        "--overlap",
+        type=int,
+        nargs="?",
+        default=0,
+        help="the chunk overlap size. default is 0",
+    )
+
     args = parser.parse_args()
 
     cli = SemanticCliFunctions()
@@ -77,6 +100,13 @@ def main():
                 text=args.text, chunk_size=args.chunk_size, overlap=args.overlap
             )
             print(f"Chunking {len(args.text)} characters")
+            for i in range(len(res)):
+                print(f"{i+1}. {res[i]}")
+        case "semantic_chunk":
+            res = cli.semantic_chunk(
+                text=args.text, max_chunk_size=args.max_chunk_size, overlap=args.overlap
+            )
+            print(f"Semantically chunking {len(args.text)} characters")
             for i in range(len(res)):
                 print(f"{i+1}. {res[i]}")
         case _:
