@@ -70,6 +70,10 @@ def main():
         help="the chunk overlap size. default is 0",
     )
 
+    commands.add_parser(
+        "embed_chunks", help="Embed the documents by chunks and create the cache."
+    )
+
     args = parser.parse_args()
 
     cli = SemanticCliFunctions()
@@ -109,6 +113,9 @@ def main():
             print(f"Semantically chunking {len(args.text)} characters")
             for i in range(len(res)):
                 print(f"{i+1}. {res[i]}")
+        case "embed_chunks":
+            embeddings = cli.embed_chunks()
+            print(f"Generated {len(embeddings)} chunked embeddings")
         case _:
             parser.print_help()
 

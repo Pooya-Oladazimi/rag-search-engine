@@ -1,11 +1,12 @@
 from actions.semantic_search import SemanticSearch
 from actions.libs import load_dataset
-import re
+from actions.chunked_semantic_search import ChunkedSemanticSearch
 
 
 class SemanticCliFunctions:
     def __init__(self) -> None:
         self.search_engine = SemanticSearch()
+        self.chunked_search_engine = ChunkedSemanticSearch()
 
     def verify_model(self):
         print(f"Model loaded: {self.search_engine.model}")
@@ -43,16 +44,8 @@ class SemanticCliFunctions:
         return res
 
     def semantic_chunk(self, text: str, max_chunk_size: int, overlap: int):
-        sentences = re.split(r"(?<=[.!?])\s+", text)
-        chunks = []
-        last_processed_index = 0
-        for i in range(0, len(sentences), max_chunk_size):
-            if i == 0:
-                last_processed_index = i + max_chunk_size
-                chunks.append(" ".join(sentences[i:last_processed_index]))
-            else:
-                last_processed_index = i + max_chunk_size - overlap
-                chunks.append(" ".join(sentences[i - overlap : last_processed_index]))
-        if last_processed_index < len(sentences):
-            chunks.append(" ".join(sentences[last_processed_index - overlap :]))
-        return chunks
+        return self.chunked_search_engine.semantic_chunk(text, max_chunk_size, overlap)
+
+    def embed_chunks(self):
+        documents = load_dataset()
+        return self.chunked_search_engine.load_or_create_chunk_embeddings(documents)
