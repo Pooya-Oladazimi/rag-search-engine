@@ -1,5 +1,6 @@
 STOPWORDS_DATASET = "data/stopwords.txt"
 DATASET = "data/movies.json"
+# DATASET = "data/test_movies.json"
 INDEX_DATA = "cache/index.pkl"
 DOCMAP_DATA = "cache/docmap.pkl"
 DOCS_LENGTH_CACHE = "cache/doc_lengths.pkl"

@@ -1,3 +1,4 @@
+from sentence_transformers.sentence_transformer.datasets import sentences
 from actions.semantic_search import SemanticSearch
 import re
 from actions.vars import CHUNKS_EMBEDDINGS_CACHE, CHUNKS_DOCS_METADATA
@@ -69,13 +70,13 @@ class ChunkedSemanticSearch(SemanticSearch):
         sentences = re.split(r"(?<=[.!?])\s+", text)
         chunks = []
         last_processed_index = 0
-        for i in range(0, len(sentences), max_chunk_size):
+        for i in range(0, len(sentences), max_chunk_size - overlap):
             if i == 0:
-                last_processed_index = i + max_chunk_size
+                last_processed_index = max_chunk_size
                 chunks.append(" ".join(sentences[i:last_processed_index]))
             else:
-                last_processed_index = i + max_chunk_size - overlap
-                chunks.append(" ".join(sentences[i - overlap : last_processed_index]))
+                last_processed_index = i + max_chunk_size
+                chunks.append(" ".join(sentences[i:last_processed_index]))
         if last_processed_index < len(sentences):
             chunks.append(" ".join(sentences[last_processed_index - overlap :]))
         return chunks
