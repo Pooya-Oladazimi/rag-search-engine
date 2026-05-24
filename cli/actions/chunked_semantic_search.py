@@ -5,6 +5,7 @@ from actions.vars import CHUNKS_EMBEDDINGS_CACHE, CHUNKS_DOCS_METADATA
 import numpy as np
 import json
 import os
+import nltk
 
 
 class ChunkedSemanticSearch(SemanticSearch):
@@ -12,6 +13,7 @@ class ChunkedSemanticSearch(SemanticSearch):
         super().__init__()
         self.chunk_embeddings = None
         self.chunk_metadata = None
+        nltk.download("punkt_tab")
 
     def build_chunk_embeddings(self, documents) -> np.ndarray:
         self.documents = documents
@@ -67,16 +69,12 @@ class ChunkedSemanticSearch(SemanticSearch):
         return self.build_chunk_embeddings(documents)
 
     def semantic_chunk(self, text: str, max_chunk_size: int, overlap: int):
-        sentences = re.split(r"(?<=[.!?])\s+", text)
+        # sentences = re.split(r"(?<=[.!?])\s+", text)
+        sentences = nltk.sent_tokenize(text)
         chunks = []
-        last_processed_index = 0
         for i in range(0, len(sentences), max_chunk_size - overlap):
             if i == 0:
-                last_processed_index = max_chunk_size
-                chunks.append(" ".join(sentences[i:last_processed_index]))
+                chunks.append(" ".join(sentences[i:max_chunk_size]))
             else:
-                last_processed_index = i + max_chunk_size
-                chunks.append(" ".join(sentences[i:last_processed_index]))
-        if last_processed_index < len(sentences):
-            chunks.append(" ".join(sentences[last_processed_index - overlap :]))
+                chunks.append(" ".join(sentences[i : i + max_chunk_size]))
         return chunks
