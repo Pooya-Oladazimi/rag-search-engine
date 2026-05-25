@@ -1,6 +1,5 @@
 import argparse
 
-from huggingface_hub.file_download import HEADER_FILENAME_PATTERN
 from actions.semantic_cli_functions import SemanticCliFunctions
 
 
@@ -74,6 +73,16 @@ def main():
         "embed_chunks", help="Embed the documents by chunks and create the cache."
     )
 
+    chunked_search_command = commands.add_parser(
+        "search_chunked", help="Search based on chunks in movies by a query"
+    )
+    chunked_search_command.add_argument(
+        "query", type=str, help="The user query to search."
+    )
+    chunked_search_command.add_argument(
+        "--limit", type=int, nargs="?", default=5, help="Search limit"
+    )
+
     args = parser.parse_args()
 
     cli = SemanticCliFunctions()
@@ -116,6 +125,8 @@ def main():
         case "embed_chunks":
             embeddings = cli.embed_chunks()
             print(f"Generated {len(embeddings)} chunked embeddings")
+        case "search_chunked":
+            cli.search_chunked(query=args.query, limit=args.limit)
         case _:
             parser.print_help()
 

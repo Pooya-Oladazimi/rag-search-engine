@@ -11,3 +11,4 @@ CHUNKS_DOCS_METADATA = "cache/chunk_metadata.json"
 CACHE_DIR = "cache"
 BM25_K1 = 1.5
 BM25_B = 0.75
+SCORE_PRECISION = 5

@@ -33,6 +33,17 @@ class SemanticCliFunctions:
             counter += 1
         return True
 
+    def search_chunked(self, query: str, limit: int = 5):
+        documents = load_dataset()
+        self.chunked_search_engine.load_or_create_chunk_embeddings(documents)
+        tops = self.chunked_search_engine.search_chunks(query, limit)
+        i = 1
+        for res in tops:
+            print(f"\n{i}. {res['title']} (score: {res['score']:.4f})")
+            print(f"   {res['description']}...")
+            i += 1
+        return True
+
     def chunk(self, text: str, chunk_size: int, overlap: int = 0) -> list[str]:
         res = []
         chars = text.split(" ")

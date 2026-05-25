@@ -1,11 +1,10 @@
-from sentence_transformers.sentence_transformer.datasets import sentences
+from collections import defaultdict
 from actions.semantic_search import SemanticSearch
 import re
-from actions.vars import CHUNKS_EMBEDDINGS_CACHE, CHUNKS_DOCS_METADATA
+from actions.vars import CHUNKS_EMBEDDINGS_CACHE, CHUNKS_DOCS_METADATA, SCORE_PRECISION
 import numpy as np
 import json
 import os
-import nltk
 
 
 class ChunkedSemanticSearch(SemanticSearch):
@@ -13,7 +12,45 @@ class ChunkedSemanticSearch(SemanticSearch):
         super().__init__()
         self.chunk_embeddings = None
         self.chunk_metadata = None
-        nltk.download("punkt_tab")
+
+    def search_chunks(self, query: str, limit: int = 10):
+        query = query.strip()
+        if not query:
+            return []
+        q_embedding = self.generate_embedding(text=query)
+        chunks_scores = []
+        idx = 0
+        for ch_embed in self.chunk_embeddings:
+            score = self.cosine_similarity(q_embedding, ch_embed)
+            res = {}
+            res["chunk_idx"] = idx
+            res["movie_idx"] = self.chunk_metadata["chunks"][idx]["movie_idx"]
+            res["score"] = score
+            idx += 1
+            chunks_scores.append(res)
+
+        movie_scores = defaultdict(float)
+        for score in chunks_scores:
+            if score["score"] > movie_scores[score["movie_idx"]]:
+                movie_scores[score["movie_idx"]] = score["score"]
+
+        sorted_movie_scores = sorted(
+            movie_scores.items(), key=lambda item: item[1], reverse=True
+        )
+        search_results = []
+        for s in sorted_movie_scores[:limit]:
+            idx = s[0]
+            score = s[1]
+            search_results.append(
+                {
+                    "id": self.documents[idx]["id"],
+                    "title": self.documents[idx]["title"],
+                    "description": self.documents[idx]["description"][:100],
+                    "score": round(score, SCORE_PRECISION),
+                    "metadata": self.documents[idx],
+                }
+            )
+        return search_results
 
     def build_chunk_embeddings(self, documents) -> np.ndarray:
         self.documents = documents
@@ -69,12 +106,25 @@ class ChunkedSemanticSearch(SemanticSearch):
         return self.build_chunk_embeddings(documents)
 
     def semantic_chunk(self, text: str, max_chunk_size: int, overlap: int):
-        # sentences = re.split(r"(?<=[.!?])\s+", text)
-        sentences = nltk.sent_tokenize(text)
+        text = text.strip()
+        if not text:
+            return [""]
+        sentences = re.split(r"(?<=[.!?])\s+", text)
         chunks = []
-        for i in range(0, len(sentences), max_chunk_size - overlap):
-            if i == 0:
-                chunks.append(" ".join(sentences[i:max_chunk_size]))
-            else:
-                chunks.append(" ".join(sentences[i : i + max_chunk_size]))
+        i = 0
+        n_sentences = len(sentences)
+        if n_sentences == 1 and not sentences[0].endswith((".", "!", "?")):
+            return sentences[0]
+        while i < n_sentences:
+            chunk_sentences = sentences[i : i + max_chunk_size]
+            if chunks and len(chunk_sentences) <= overlap:
+                break
+            cleaned_sentences = []
+            for s in chunk_sentences:
+                s = s.strip()
+                cleaned_sentences.append(s)
+            ch = " ".join(cleaned_sentences)
+            if ch:
+                chunks.append(ch)
+            i += max_chunk_size - overlap
         return chunks
