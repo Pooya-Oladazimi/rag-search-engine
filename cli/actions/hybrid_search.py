@@ -22,8 +22,8 @@ class HybridSearch:
         return self.idx.bm25_search(query, limit)
 
     def weighted_search(self, query: str, alpha: float, limit: int = 5) -> list[dict]:
-        bm25 = self.idx.bm25_search(query=query, limit=500)
-        semantics = self.semantic_search.search_chunks(query=query, limit=500)
+        bm25 = self.idx.bm25_search(query=query, limit=limit * 500)
+        semantics = self.semantic_search.search_chunks(query=query, limit=limit * 500)
         keyword_scores = normalize_scores(bm25.values())
         semantics_scores = normalize_scores([item["score"] for item in semantics])
         results = {}
@@ -53,9 +53,9 @@ class HybridSearch:
                     bm25_score=bm25_score, semantic_score=semantic_s, alpha=alpha
                 ),
             }
-        return list(
-            sorted(results.items(), key=lambda item: item["hybrid"], reverse=True)
-        )[:limit]
+        return sorted(results.values(), key=lambda item: item["hybrid"], reverse=True)[
+            :limit
+        ]
 
     def rrf_search(self, query: str, k: int, limit: int = 10) -> list[dict]:
         raise NotImplementedError("RRF hybrid search is not implemented yet.")

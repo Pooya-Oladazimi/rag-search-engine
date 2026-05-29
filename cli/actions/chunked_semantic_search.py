@@ -108,7 +108,7 @@ class ChunkedSemanticSearch(SemanticSearch):
     def semantic_chunk(self, text: str, max_chunk_size: int, overlap: int):
         text = text.strip()
         if not text:
-            return [""]
+            return []
         sentences = re.split(r"(?<=[.!?])\s+", text)
         chunks = []
         i = 0

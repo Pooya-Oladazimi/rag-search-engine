@@ -44,8 +44,9 @@ def main() -> None:
             i = 1
             for res in results:
                 print(
-                    f"{i}. {res['title']} \n Hybrid Score: {res['hybrid']} \n BM25: {res['bm25']}, Semantic: {res['semantic']}v\n{res['description'][:200]}"
+                    f"{i}. {res['document']['title']} \n Hybrid Score: {res['hybrid']} \n BM25: {res['bm25']}, Semantic: {res['semantic']}v\n{res['document']['description'][:200]}"
                 )
+                i += 1
 
         case _:
             parser.print_help()
